@@ -166,7 +166,7 @@ function App() {
       </header>
 
       <main className="workspace">
-        <FileUploadScreen onBatchAnalyzed="{handleBatchAnalyzed}" onSingleAnalyzed="{handleSingleAnalyzed}"/>
+        <FileUploadScreen onBatchAnalyzed={handleBatchAnalyzed} onSingleAnalyzed={handleSingleAnalyzed}/>
 
         <div className="content-column">
           <section className="result-spotlight">
