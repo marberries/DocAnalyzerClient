@@ -11,6 +11,15 @@ export const singleFileUpload = async (data, options) => {
   }
 };
 
+export const reanalyzeSingleFile = async (id) => {
+  try {
+    const response = await axios.post(apiUrl + 'reanalyze/' + id);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const getSingleFiles = async () => {
   try {
     const { data } = await axios.get(apiUrl + 'getSingleFiles');

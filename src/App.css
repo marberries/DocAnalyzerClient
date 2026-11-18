@@ -784,3 +784,39 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+.spotlight-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-reanalyze {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #1d4ed8;
+  border: 1px solid #1d4ed8;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-reanalyze:hover:not(:disabled) {
+  background-color: #1e40af;
+}
+
+.btn-reanalyze:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.ai-diagnostic-bar {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 12px;
+  margin-bottom: 14px;
+}

@@ -5,6 +5,7 @@ import {
   getSingleFiles,
   getMultipleFiles,
   deleteSingleFile,
+  reanalyzeSingleFile,
 } from './data/api';
 
 const CATEGORIES = [
@@ -25,6 +26,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [apiConnected, setApiConnected] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [isReanalyzing, setIsReanalyzing] = useState(false);
 
   const loadAllData = async (autoSelectFirst = false) => {
     try {
@@ -63,6 +65,22 @@ function App() {
       setSelectedDoc(newBatch.files[0]);
     }
     loadAllData(false);
+  };
+
+  const handleReanalyze = async () => {
+    if (!selectedDoc || !selectedDoc._id) return;
+    try {
+      setIsReanalyzing(true);
+      const updatedDoc = await reanalyzeSingleFile(selectedDoc._id);
+      setSelectedDoc(updatedDoc);
+      setSingleFiles((prev) =>
+        prev.map((item) => (item._id === updatedDoc._id ? updatedDoc : item))
+      );
+    } catch (error) {
+      alert('Failed to run AI analysis on this document.');
+    } finally {
+      setIsReanalyzing(false);
+    }
   };
 
   const handleDelete = async (id, e) => {
@@ -148,13 +166,9 @@ function App() {
       </header>
 
       <main className="workspace">
-        <FileUploadScreen
-          onSingleAnalyzed={handleSingleAnalyzed}
-          onBatchAnalyzed={handleBatchAnalyzed}
-        />
+        <FileUploadScreen onBatchAnalyzed="{handleBatchAnalyzed}" onSingleAnalyzed="{handleSingleAnalyzed}"/>
 
         <div className="content-column">
-          {/* STEP 2: ACTIVE ANALYSIS RESULT SPOTLIGHT */}
           <section className="result-spotlight">
             <div className="spotlight-header">
               <div>
@@ -176,23 +190,41 @@ function App() {
                     </span>
                   </div>
                 ) : (
-                  <h2 className="spotlight-title">
-                    No Document Selected Yet
-                  </h2>
+                  <h2 className="spotlight-title">No Document Selected Yet</h2>
                 )}
               </div>
 
-              {selectedDoc && selectedDoc.filePath && (
-                <a
-                  href={`/${selectedDoc.filePath}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn-outline"
-                >
-                  Download / Open Original
-                </a>
+              {selectedDoc && (
+                <div className="spotlight-actions">
+                  {selectedDoc._id && (
+                    <button
+                      type="button"
+                      className="btn-reanalyze"
+                      disabled={isReanalyzing}
+                      onClick={handleReanalyze}
+                    >
+                      {isReanalyzing ? 'Running AI...' : 'Re-analyze with AI'}
+                    </button>
+                  )}
+                  {selectedDoc.filePath && (
+                    <a
+                      href={`/${selectedDoc.filePath}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-outline"
+                    >
+                      Download / Open Original
+                    </a>
+                  )}
+                </div>
               )}
             </div>
+
+            {selectedDoc && !selectedDoc.aiAnalyzed && selectedDoc.aiError && (
+              <div className="ai-diagnostic-bar">
+                <strong>AI Status Notice:</strong> {selectedDoc.aiError}
+              </div>
+            )}
 
             {!selectedDoc ? (
               <div className="empty-spotlight">
@@ -227,7 +259,7 @@ function App() {
 
                 <div className="analysis-grid">
                   <div className="analysis-block">
-                    <span className="box-label">Executive Summary</span>
+                    <span className="box-label">Executive Summary (English)</span>
                     <p className="summary-paragraph">
                       {selectedDoc.summary || 'No summary generated.'}
                     </p>
@@ -278,7 +310,6 @@ function App() {
             )}
           </section>
 
-          {/* STEP 3: ARCHIVE & FILTERING */}
           <section className="registry-panel">
             <div className="step-badge">STEP 3 · INDEXED ARCHIVE</div>
             <div className="registry-toolbar">
