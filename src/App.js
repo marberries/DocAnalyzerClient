@@ -24,6 +24,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [apiConnected, setApiConnected] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [previewDoc, setPreviewDoc] = useState(null);
 
   const getSingleFilesList = async () => {
     try {
@@ -55,6 +56,9 @@ function App() {
     try {
       await deleteSingleFile(id);
       setSingleFiles((prev) => prev.filter((item) => item._id !== id));
+      if (previewDoc && previewDoc._id === id) {
+        setPreviewDoc(null);
+      }
     } catch (error) {
       alert('Failed to delete record from server.');
     }
@@ -212,13 +216,20 @@ function App() {
                         </div>
 
                         <div className="doc-actions">
+                          <button
+                            type="button"
+                            className="btn-preview"
+                            onClick={() => setPreviewDoc(file)}
+                          >
+                            Preview
+                          </button>
                           <a
                             href={`/${file.filePath}`}
                             target="_blank"
                             rel="noreferrer"
                             className="link-raw"
                           >
-                            Open File
+                            Raw File
                           </a>
                           <button
                             type="button"
@@ -241,10 +252,18 @@ function App() {
                       </div>
 
                       <div className="doc-summary-box">
-                        <span className="box-label">Extracted Summary</span>
+                        <span className="box-label">Analytical Summary</span>
                         <p className="doc-summary-text">
                           {file.summary || 'No text summary extracted.'}
                         </p>
+
+                        {file.keyFindings && file.keyFindings.length > 0 && (
+                          <ul className="findings-list">
+                            {file.keyFindings.map((point, idx) => (
+                              <li key={idx}>{point}</li>
+                            ))}
+                          </ul>
+                        )}
                       </div>
 
                       {file.keywords && file.keywords.length > 0 && (
@@ -304,7 +323,7 @@ function App() {
                           <th>Category</th>
                           <th>Words</th>
                           <th>Size</th>
-                          <th>Raw</th>
+                          <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -314,14 +333,21 @@ function App() {
                             <td>{item.category}</td>
                             <td className="mono-cell">{item.wordCount}</td>
                             <td className="mono-cell">{item.fileSize}</td>
-                            <td>
+                            <td className="table-actions">
+                              <button
+                                type="button"
+                                className="btn-preview"
+                                onClick={() => setPreviewDoc(item)}
+                              >
+                                Preview
+                              </button>
                               <a
                                 href={`/${item.filePath}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="link-raw"
                               >
-                                View
+                                Raw
                               </a>
                             </td>
                           </tr>
@@ -335,6 +361,59 @@ function App() {
           )}
         </section>
       </main>
+
+      {previewDoc && (
+        <div className="modal-backdrop" onClick={() => setPreviewDoc(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <span className={getCategoryClass(previewDoc.category)}>
+                  {previewDoc.category || 'General Document'}
+                </span>
+                <h3 className="modal-title">{previewDoc.fileName}</h3>
+              </div>
+              <button
+                type="button"
+                className="btn-close-modal"
+                onClick={() => setPreviewDoc(null)}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="doc-specs">
+              <span>Size: {previewDoc.fileSize}</span>
+              <span>·</span>
+              <span>Words: {previewDoc.wordCount || 0}</span>
+              <span>·</span>
+              <span>Type: {previewDoc.fileType}</span>
+            </div>
+
+            <div className="doc-summary-box">
+              <span className="box-label">Summary</span>
+              <p className="doc-summary-text">{previewDoc.summary}</p>
+            </div>
+
+            <div className="modal-body">
+              <span className="box-label">Extracted Document Content</span>
+              <pre className="extracted-pre">
+                {previewDoc.extractedText || previewDoc.summary || 'No text content stored.'}
+              </pre>
+            </div>
+
+            <div className="modal-footer">
+              <a
+                href={`/${previewDoc.filePath}`}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-primary modal-link"
+              >
+                Open Original File in New Tab
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer className="app-footer">
         <span>DocAnalyzer MERN Client · Academic Coursework Build (2026)</span>
